@@ -9,7 +9,7 @@ export class AuthController {
 
   @Post()
   async register(@Body() user: User): Promise<ApiSuccessResponse<User>> {
-    const data = await this.authService.createUser(user);
+    const data = await this.authService.register(user);
     console.log(data);
     return {
       status: 'success',

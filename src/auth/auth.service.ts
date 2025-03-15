@@ -10,7 +10,7 @@ export class AuthService {
     private readonly userModel: Model<User>,
   ) {}
 
-  async createUser(user: User) {
+  async register(user: User) {
     return await this.userModel.create(user);
   }
 }
