@@ -7,10 +7,18 @@ import { AuthService } from './auth.service';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
+  @Post('register')
   async register(@Body() user: User): Promise<ApiSuccessResponse<User>> {
     const data = await this.authService.register(user);
-    console.log(data);
+    return {
+      status: 'success',
+      data: data,
+    };
+  }
+
+  @Post('login')
+  async login(@Body() user: User): Promise<ApiSuccessResponse<User | null>> {
+    const data = await this.authService.login(user);
     return {
       status: 'success',
       data: data,
