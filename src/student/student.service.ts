@@ -23,7 +23,10 @@ export class StudentService {
     const student = await this.studentModel.create(body);
 
     let schedule = createSchedule(student);
-    await this.calendarModel.insertMany(schedule);
+    const calendars = await this.calendarModel.insertMany(schedule);
+    await this.lessonModel.insertMany(
+      calendars.map(({ studentId, id }) => ({ studentId, calendarId: id })),
+    );
 
     return student;
   }

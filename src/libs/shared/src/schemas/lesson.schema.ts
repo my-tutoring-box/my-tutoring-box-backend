@@ -22,17 +22,16 @@ class Homework {
   },
 })
 export class Lesson {
-  @Prop({ required: true })
+  @Prop()
   content?: string;
 
-  @Prop({ required: true, type: [Homework] })
+  @Prop({ type: [Homework] })
   homework?: Homework[];
 
   @Prop({
     type: SchemaTypes.ObjectId,
     ref: 'Student',
     required: true,
-    unique: true,
   })
   studentId: Types.ObjectId;
 
