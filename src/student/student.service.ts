@@ -30,4 +30,8 @@ export class StudentService {
 
     return student;
   }
+
+  async findAll() {
+    return await this.studentModel.find();
+  }
 }

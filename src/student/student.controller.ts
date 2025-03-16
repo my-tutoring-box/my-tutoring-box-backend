@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ApiSuccessResponse } from 'src/libs/shared/src/interfaces/api.interface';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
 import { StudentService } from './student.service';
@@ -15,6 +15,15 @@ export class StudentController {
     return {
       status: 'success',
       data: student,
+    };
+  }
+
+  @Get()
+  async getAllStudents(): Promise<ApiSuccessResponse<Student[]>> {
+    const students = await this.studentService.findAll();
+    return {
+      status: 'success',
+      data: students,
     };
   }
 }
