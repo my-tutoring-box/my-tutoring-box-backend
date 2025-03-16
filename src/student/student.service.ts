@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Cron } from '@nestjs/schedule';
+import { endOfMonth, startOfMonth } from 'date-fns';
 import { Model, Types } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
@@ -34,6 +35,19 @@ export class StudentService {
 
   async findAll() {
     return await this.studentModel.find();
+  }
+
+  async getCalendars(studentId: string) {
+    const now = new Date();
+    const startOfCurrentMonth = startOfMonth(now);
+    const endOfCurrentMonth = endOfMonth(now);
+
+    const calendars = await this.calendarModel.find({
+      studentId,
+      date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
+    });
+
+    return calendars;
   }
 
   @Cron('0 0 * * *')

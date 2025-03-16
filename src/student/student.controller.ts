@@ -27,6 +27,15 @@ export class StudentController {
     };
   }
 
+  @Get(':studentId/calendars')
+  async getCalendars(@Param('studentId') studentId: string) {
+    const calendars = await this.studentService.getCalendars(studentId);
+    return {
+      status: 'success',
+      data: calendars,
+    };
+  }
+
   @Patch(':studentId/count')
   async setCount(
     @Param('studentId') studentId: string,
