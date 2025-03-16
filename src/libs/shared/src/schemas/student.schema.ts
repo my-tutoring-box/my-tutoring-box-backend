@@ -77,7 +77,7 @@ export class Student {
   @Prop({ required: true })
   startDate: Date;
 
-  @Prop()
+  @Prop({ unique: true })
   code?: string;
 
   @Prop({ default: 1 })

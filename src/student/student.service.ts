@@ -11,6 +11,8 @@ export class StudentService {
   ) {}
 
   async addStudent(student: Student) {
+    const randNum = Math.floor(Math.random() * 1000000).toString();
+    student.code = randNum;
     return await this.studentModel.create(student);
   }
 }
