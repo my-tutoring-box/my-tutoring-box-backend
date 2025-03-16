@@ -4,13 +4,16 @@ import { Calendar } from './calendar.schema';
 
 export type LessonDocument = HydratedDocument<Lesson>;
 
-class Homework {
+@Schema()
+export class Homework {
   @Prop({ required: true })
   text: string;
 
-  @Prop({ required: true })
-  complete: string;
+  @Prop({ required: true, default: false })
+  complete?: boolean;
 }
+
+export const HomeworkSchema = SchemaFactory.createForClass(Homework);
 
 @Schema({
   collection: 'lessons',
@@ -26,7 +29,7 @@ export class Lesson {
   @Prop({ default: '' })
   content?: string;
 
-  @Prop({ type: [Homework] })
+  @Prop({ type: [HomeworkSchema] })
   homework?: Homework[];
 
   @Prop({

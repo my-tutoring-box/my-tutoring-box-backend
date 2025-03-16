@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
+import { LessonDto } from './dto/lesson.dto';
 
 @Injectable()
 export class LessonService {
@@ -27,5 +28,16 @@ export class LessonService {
     );
 
     return lesson;
+  }
+
+  async setLesson(lessonId: string, body: LessonDto) {
+    return await this.lessonModel.findByIdAndUpdate(
+      lessonId,
+      {
+        content: body.content,
+        homework: body.homework,
+      },
+      { new: true },
+    );
   }
 }
