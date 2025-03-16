@@ -21,7 +21,7 @@ class TimeRange {
 }
 
 class TimeSlot {
-  @Prop({ required: true, enum: DayTypes })
+  @Prop({ required: true, enum: DayTypes, type: String })
   day: DayType;
 
   @Prop({ required: true })
