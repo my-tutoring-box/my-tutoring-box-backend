@@ -2,16 +2,16 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { StudentsModule } from './students/students.module';
-import { LessonsModule } from './lessons/lessons.module';
+import { StudentModule } from './student/student.module';
+import { LessonModule } from './lesson/lesson.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
     AuthModule,
-    StudentsModule,
-    LessonsModule,
+    StudentModule,
+    LessonModule,
     ConfigModule.forRoot({ envFilePath: '.env.development' }),
     MongooseModule.forRoot(process.env.DATABASE_URL!),
   ],

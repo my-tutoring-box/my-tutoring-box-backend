@@ -1,4 +1,4 @@
 export interface ApiSuccessResponse<T> {
-    status: 'success';
-    data?: T;
-  }
+  status: 'success';
+  data?: T;
+}
