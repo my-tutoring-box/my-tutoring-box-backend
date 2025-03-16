@@ -18,7 +18,7 @@ export class Calendar {
   date: Date;
 
   @Prop({ required: true })
-  count: string;
+  count: number;
 
   @Prop({ required: true, default: 1 })
   cycle: number;

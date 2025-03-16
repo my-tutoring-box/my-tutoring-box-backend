@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Cron } from '@nestjs/schedule';
+import { Model, Types } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
@@ -33,5 +34,35 @@ export class StudentService {
 
   async findAll() {
     return await this.studentModel.find();
+  }
+
+  @Cron('0 0 * * *')
+  async updateAllStudentsCount() {
+    console.log('🔄 Running daily student count update...');
+
+    const students = await this.studentModel.find();
+
+    for (const student of students) {
+      await this.setCount(student.id);
+    }
+
+    console.log('✅ Daily student count update completed.');
+  }
+
+  async setCount(studentId: string) {
+    const calendar = await this.calendarModel.findOne(
+      {
+        studentId,
+        date: { $gte: new Date() },
+      },
+      { count: 1 },
+    );
+    return await this.studentModel.findByIdAndUpdate(
+      studentId,
+      {
+        count: calendar?.count,
+      },
+      { new: true },
+    );
   }
 }

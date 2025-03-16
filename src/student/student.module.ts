@@ -14,6 +14,7 @@ import {
   Calendar,
   CalendarSchema,
 } from 'src/libs/shared/src/schemas/calendar.schema';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import {
     MongooseModule.forFeature([
       { name: Calendar.name, schema: CalendarSchema },
     ]),
+    ScheduleModule.forRoot(),
   ],
   controllers: [StudentController],
   providers: [StudentService],
