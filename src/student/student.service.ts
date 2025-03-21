@@ -37,17 +37,24 @@ export class StudentService {
     return await this.studentModel.find();
   }
 
-  async getCalendars(studentId: string) {
+  async getMonthlyCalendars() {
     const now = new Date();
     const startOfCurrentMonth = startOfMonth(now);
     const endOfCurrentMonth = endOfMonth(now);
 
     const calendars = await this.calendarModel.find({
-      studentId,
       date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
     });
 
     return calendars;
+  }
+
+  async getStudentCalendars(studentId: string) {
+    const student = await this.studentModel.findById(studentId);
+    if (student == null) return;
+
+    const cycle = Math.floor(student.count / (student.frequency * 4)) + 1;
+    return await this.calendarModel.find({ cycle });
   }
 
   @Cron('0 0 * * *')
