@@ -9,8 +9,8 @@ export class Homework {
   @Prop({ required: true })
   text: string;
 
-  @Prop({ required: true, default: false })
-  complete?: boolean;
+  @Prop({ required: true, type: Number, enum: [0, 1], default: 0 })
+  complete?: number;
 }
 
 export const HomeworkSchema = SchemaFactory.createForClass(Homework);

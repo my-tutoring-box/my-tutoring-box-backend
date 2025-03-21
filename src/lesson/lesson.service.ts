@@ -16,7 +16,7 @@ export class LessonService {
     private readonly studentModel: Model<Student>,
   ) {}
 
-  async findLesson(studentId: string) {
+  async findCurrentLesson(studentId: string) {
     const student = await this.studentModel.findById(studentId);
     const lessons = await this.lessonModel
       .find({ studentId })
@@ -37,6 +37,19 @@ export class LessonService {
         content: body.content,
         homework: body.homework,
       },
+      { new: true },
+    );
+  }
+
+  async setHomeworkComplete(lessonId: string, homeworkId: string) {
+    return await this.lessonModel.findOneAndUpdate(
+      {
+        _id: lessonId,
+        'homework._id': homeworkId,
+      },
+      {
+        $bit: { 'homework.$.complete': { xor: 1 } },
+      } as any,
       { new: true },
     );
   }

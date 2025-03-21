@@ -12,7 +12,7 @@ export class LessonController {
   async getLesson(
     @Param('studentId') studentId: string,
   ): Promise<ApiSuccessResponse<Lesson>> {
-    const lesson = await this.lessonService.findLesson(studentId);
+    const lesson = await this.lessonService.findCurrentLesson(studentId);
     return {
       status: 'success',
       data: lesson,
@@ -25,6 +25,21 @@ export class LessonController {
     @Body() body: LessonDto,
   ): Promise<ApiSuccessResponse<Lesson | null>> {
     const lesson = await this.lessonService.setLesson(lessonId, body);
+    return {
+      status: 'success',
+      data: lesson,
+    };
+  }
+
+  @Patch(':lessonId/homeworks/:homeworkId')
+  async setHomeworkComplete(
+    @Param('lessonId') lessonId: string,
+    @Param('homeworkId') homeworkId: string,
+  ) {
+    const lesson = await this.lessonService.setHomeworkComplete(
+      lessonId,
+      homeworkId,
+    );
     return {
       status: 'success',
       data: lesson,
