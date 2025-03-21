@@ -53,7 +53,7 @@ export class StudentService {
     const student = await this.studentModel.findById(studentId);
     if (student == null) return;
 
-    const cycle = getStudentCycle(student.frequency, student.count);
+    const cycle = getStudentCycle(student);
     return await this.calendarModel.find({ cycle });
   }
 
