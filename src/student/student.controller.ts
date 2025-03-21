@@ -27,9 +27,18 @@ export class StudentController {
     };
   }
 
+  @Get('calendars')
+  async getAllCalendars() {
+    const calendars = await this.studentService.getMonthlyCalendars();
+    return {
+      status: 'success',
+      data: calendars,
+    };
+  }
+
   @Get(':studentId/calendars')
   async getCalendars(@Param('studentId') studentId: string) {
-    const calendars = await this.studentService.getCalendars(studentId);
+    const calendars = await this.studentService.getStudentCalendars(studentId);
     return {
       status: 'success',
       data: calendars,

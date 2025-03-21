@@ -6,7 +6,7 @@ import { Model, Types } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
-import { createSchedule } from 'src/utils/schedule.util';
+import { createSchedule, getStudentCycle } from 'src/utils/schedule.util';
 
 @Injectable()
 export class StudentService {
@@ -37,17 +37,24 @@ export class StudentService {
     return await this.studentModel.find();
   }
 
-  async getCalendars(studentId: string) {
+  async getMonthlyCalendars() {
     const now = new Date();
     const startOfCurrentMonth = startOfMonth(now);
     const endOfCurrentMonth = endOfMonth(now);
 
     const calendars = await this.calendarModel.find({
-      studentId,
       date: { $gte: startOfCurrentMonth, $lte: endOfCurrentMonth },
     });
 
     return calendars;
+  }
+
+  async getStudentCalendars(studentId: string) {
+    const student = await this.studentModel.findById(studentId);
+    if (student == null) return;
+
+    const cycle = getStudentCycle(student);
+    return await this.calendarModel.find({ cycle });
   }
 
   @Cron('0 0 * * *')
