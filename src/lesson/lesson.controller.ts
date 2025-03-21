@@ -45,4 +45,13 @@ export class LessonController {
       data: lesson,
     };
   }
+
+  @Get('summary')
+  async summaryLessons(@Param('studentId') studentId: string) {
+    const lessons = await this.lessonService.summaryLessons(studentId);
+    return {
+      status: 'success',
+      data: lessons,
+    };
+  }
 }

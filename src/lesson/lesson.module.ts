@@ -10,11 +10,18 @@ import {
   Student,
   StudentSchema,
 } from 'src/libs/shared/src/schemas/student.schema';
+import {
+  Calendar,
+  CalendarSchema,
+} from 'src/libs/shared/src/schemas/calendar.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Lesson.name, schema: LessonSchema }]),
     MongooseModule.forFeature([{ name: Student.name, schema: StudentSchema }]),
+    MongooseModule.forFeature([
+      { name: Calendar.name, schema: CalendarSchema },
+    ]),
   ],
   controllers: [LessonController],
   providers: [LessonService],
