@@ -6,7 +6,7 @@ import { Model, Types } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
-import { createSchedule } from 'src/utils/schedule.util';
+import { createSchedule, getStudentCycle } from 'src/utils/schedule.util';
 
 @Injectable()
 export class StudentService {
@@ -53,7 +53,7 @@ export class StudentService {
     const student = await this.studentModel.findById(studentId);
     if (student == null) return;
 
-    const cycle = Math.floor(student.count / (student.frequency * 4)) + 1;
+    const cycle = getStudentCycle(student);
     return await this.calendarModel.find({ cycle });
   }
 
