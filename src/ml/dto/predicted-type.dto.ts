@@ -1,5 +1,6 @@
-export class PredictedType {
-  predicted_type: number;
+export class PredictedTypeDto {
+  label: number;
+  type: string;
 }
 
 // Type Description

@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import axios from 'axios';
+import { PredictedTypeDto } from './dto/predicted-type.dto';
 
 @Injectable()
 export class MlService {
-  async predictStudentType(answers: number[]): Promise<any> {
+  async predictStudentType(answers: number[]): Promise<PredictedTypeDto> {
     const url = 'http://localhost:8000/predict';
 
     try {
