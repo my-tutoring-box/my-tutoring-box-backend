@@ -82,6 +82,12 @@ export class LessonService {
         : null,
       content: d?.content,
     }));
-    return { data, account: student.account, fee: student.fee };
+    return {
+      data,
+      account: student.account,
+      fee: student.fee,
+      name: student.name,
+      cycle: getStudentCycle(student) - 1,
+    };
   }
 }
