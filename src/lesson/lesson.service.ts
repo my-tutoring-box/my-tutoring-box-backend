@@ -6,6 +6,7 @@ import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
 import { Student } from 'src/libs/shared/src/schemas/student.schema';
 import { LessonDto } from './dto/lesson.dto';
 import { getStudentCycle } from 'src/utils/schedule.util';
+import { format } from 'date-fns';
 
 @Injectable()
 export class LessonService {
@@ -76,7 +77,9 @@ export class LessonService {
     );
 
     const data = rawData.map((d) => ({
-      date: d?.calendar?.date,
+      date: d?.calendar?.date
+        ? format(new Date(d.calendar.date), 'MM월 dd일')
+        : null,
       content: d?.content,
     }));
     return { data, account: student.account, fee: student.fee };
