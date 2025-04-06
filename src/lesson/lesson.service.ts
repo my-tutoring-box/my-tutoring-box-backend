@@ -67,10 +67,18 @@ export class LessonService {
       .find({ studentId, cycle: cycle - 1 })
       .sort({ count: 1 });
 
-    return await Promise.all(
+    const rawData = await Promise.all(
       calendars.map(async (c) => {
-        return await this.lessonModel.findOne({ calendarId: c._id });
+        return await this.lessonModel
+          .findOne({ calendarId: c._id })
+          .populate('calendar');
       }),
     );
+
+    const data = rawData.map((d) => ({
+      date: d?.calendar?.date,
+      content: d?.content,
+    }));
+    return { data, account: student.account, fee: student.fee };
   }
 }
