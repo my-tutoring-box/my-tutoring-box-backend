@@ -3,6 +3,7 @@ import {
   Student,
   StudentDocument,
 } from 'src/libs/shared/src/schemas/student.schema';
+import { StudentService } from 'src/student/student.service';
 
 export function getStudentCycle(student: StudentDocument) {
   const totalLessons = student.frequency * 4;
@@ -13,7 +14,7 @@ export function getStudentCycle(student: StudentDocument) {
 export function createSchedule(student: StudentDocument) {
   const lessonDays = student.time.map((t) => getDayNumber(t.day));
   const totalLessons = student.frequency * 4;
-  const cycle = this.getStudentCycle(student);
+  const cycle = getStudentCycle(student);
   let schedule: any[] = [];
   let date = student.startDate;
   let count = 1;
@@ -35,4 +36,13 @@ export function createSchedule(student: StudentDocument) {
 export function getDayNumber(day: string): number {
   const days = { 일: 0, 월: 1, 화: 2, 수: 3, 목: 4, 금: 5, 토: 6 };
   return days[day];
+}
+
+export function getNextLessonDate(from: Date, targetDay: number): Date {
+  const currentDay = from.getDay();
+  const daysToAdd = (targetDay - currentDay + 7) % 7 || 7;
+
+  const nextDate = addDays(from, daysToAdd);
+
+  return nextDate;
 }

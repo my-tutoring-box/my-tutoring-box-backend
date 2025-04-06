@@ -46,13 +46,7 @@ export class StudentController {
   }
 
   @Patch(':studentId/count')
-  async setCount(
-    @Param('studentId') studentId: string,
-  ): Promise<ApiSuccessResponse<Student | null>> {
-    const student = await this.studentService.setCount(studentId);
-    return {
-      status: 'success',
-      data: student,
-    };
+  async ManageSchedule(): Promise<void> {
+    await this.studentService.ManageSchedule();
   }
 }
