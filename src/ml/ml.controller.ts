@@ -7,6 +7,11 @@ export class MlController {
 
   @Post('predict')
   async predict(@Body('answers') answers: number[]) {
-    return await this.mlService.predictStudentType(answers);
+    const result = await this.mlService.predictStudentType(answers);
+    const books = await this.mlService.recommendWorkbook(result.label);
+    return {
+      ...result,
+      books,
+    };
   }
 }
