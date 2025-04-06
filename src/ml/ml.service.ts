@@ -19,7 +19,7 @@ export class MlService {
     }
   }
 
-  async recommendWorkbook(label: number): Promise<string[]> {
+  async recommendWorkbooks(label: number): Promise<string[]> {
     const bookMap = {
       0: ['개념쎈', 'RPM 기초', '오투 중단원 정리'],
       1: ['기출 준킬러 정리집', '마플 BASIC', '쎈 중간 난도'],
