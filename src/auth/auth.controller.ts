@@ -8,7 +8,7 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() user: User): Promise<ApiSuccessResponse<User>> {
+  async register(@Body() user: User): Promise<ApiSuccessResponse<User | null>> {
     const data = await this.authService.register(user);
     return {
       status: 'success',

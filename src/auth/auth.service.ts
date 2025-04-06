@@ -11,7 +11,9 @@ export class AuthService {
   ) {}
 
   async register(user: User) {
-    return await this.userModel.create(user);
+    return (await this.userModel.findOne({ email: user.email }))
+      ? this.login(user)
+      : await this.userModel.create(user);
   }
 
   async login(user: User) {
