@@ -36,7 +36,6 @@ export class LessonService {
         new Date(a.calendarId.date).getTime(),
     );
 
-    console.log(lessons);
     const cycle = getStudentCycle(student) - 1;
 
     const lesson = lessons.find(
