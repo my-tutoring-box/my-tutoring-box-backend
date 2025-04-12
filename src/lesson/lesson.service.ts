@@ -29,6 +29,14 @@ export class LessonService {
       .find({ studentId })
       .populate<{ calendarId: Calendar }>('calendarId')
       .lean();
+
+    const sortedLessons = lessons.sort(
+      (a, b) =>
+        new Date(b.calendarId.date).getTime() -
+        new Date(a.calendarId.date).getTime(),
+    );
+
+    console.log(lessons);
     const cycle = getStudentCycle(student) - 1;
 
     const lesson = lessons.find(
