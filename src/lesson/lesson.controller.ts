@@ -35,6 +35,7 @@ export class LessonController {
   async setHomeworkComplete(
     @Param('lessonId') lessonId: string,
     @Param('homeworkId') homeworkId: string,
+    @Body() body: {},
   ) {
     const lesson = await this.lessonService.setHomeworkComplete(
       lessonId,
