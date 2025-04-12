@@ -65,7 +65,7 @@ export class StudentService {
     if (student == null) return;
 
     const cycle = getStudentCycle(student);
-    return await this.calendarModel.find({ cycle });
+    return await this.calendarModel.find({ cycle }).sort({ count: 1 });
   }
 
   @Cron('0 0 * * *')
