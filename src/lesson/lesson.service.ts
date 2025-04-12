@@ -23,13 +23,18 @@ export class LessonService {
 
   async findCurrentLesson(studentId: string) {
     const student = await this.studentModel.findById(studentId);
+    if (!student) return;
+
     const lessons = await this.lessonModel
       .find({ studentId })
       .populate<{ calendarId: Calendar }>('calendarId')
       .lean();
+    const cycle = getStudentCycle(student) - 1;
 
     const lesson = lessons.find(
-      (lesson) => lesson.calendarId.count === student?.count,
+      (lesson) =>
+        lesson.calendarId.count ===
+        student?.count - cycle * student?.frequency * 4,
     );
 
     return lesson;
