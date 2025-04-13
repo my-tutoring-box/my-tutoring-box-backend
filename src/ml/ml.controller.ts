@@ -10,8 +10,11 @@ export class MlController {
     const result = await this.mlService.predictStudentType(answers);
     const workbooks = await this.mlService.recommendWorkbooks(result.label);
     return {
-      ...result,
-      workbooks,
+      status: 'success',
+      data: {
+        ...result,
+        workbooks,
+      },
     };
   }
 }
