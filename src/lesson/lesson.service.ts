@@ -38,10 +38,10 @@ export class LessonService {
 
     const cycle = getStudentCycle(student) - 1;
 
-    const lesson = lessons.find(
+    const lesson = sortedLessons.find(
       (lesson) =>
         lesson.calendarId.count ===
-        student?.count - cycle * student?.frequency * 4,
+        student?.count + 1 - cycle * student?.frequency * 4,
     );
 
     return lesson;

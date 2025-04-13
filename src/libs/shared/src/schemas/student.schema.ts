@@ -9,7 +9,14 @@ type DayType = (typeof DayTypes)[number];
 const SchoolTypes = ['중학교', '고등학교', '대학교'] as const;
 type SchoolType = (typeof SchoolTypes)[number];
 
-const GradeTypes = ['1학년', '2학년', '3학년', '4학년'] as const;
+const GradeTypes = [
+  '1학년',
+  '2학년',
+  '3학년',
+  '4학년',
+  '5학년',
+  '6학년',
+] as const;
 type GradeType = (typeof GradeTypes)[number];
 
 class TimeRange {
