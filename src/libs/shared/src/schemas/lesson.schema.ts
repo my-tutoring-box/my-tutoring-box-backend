@@ -11,6 +11,8 @@ export class Homework {
 
   @Prop({ required: true, type: Number, enum: [0, 1], default: 0 })
   complete?: number;
+
+  _id?: Types.ObjectId;
 }
 
 export const HomeworkSchema = SchemaFactory.createForClass(Homework);
