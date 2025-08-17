@@ -1,4 +1,4 @@
-name: CI/CD to EC2
+name: Upload and Build Images
 
 on:
   push:
@@ -23,11 +23,10 @@ jobs:
           docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/back:latest .
           docker push ${{ secrets.DOCKER_HUB_USERNAME }}/back:latest
 
-      # 4. EC2 안에서 바로 실행
+      # 4. 서비스 레포와 배포 레포 연결
       - run: |
-          sudo docker stop back || true
-          sudo docker rm back || true
-          sudo docker run -d --name back \
-            --env-file /home/ubuntu/app/.env.development \
-            -p 3000:3000 \
-            ${{ secrets.DOCKER_HUB_USERNAME }}/back:latest
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            https://api.github.com/repos/my-tutoring-box/my-tutoring-box-deploy/dispatches \
+            -d '{"event_type":"deploy"}'

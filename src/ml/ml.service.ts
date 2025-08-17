@@ -5,7 +5,7 @@ import { PredictedTypeDto } from './dto/predicted-type.dto';
 @Injectable()
 export class MlService {
   async predictStudentType(answers: number[]): Promise<PredictedTypeDto> {
-    const url = 'http://localhost:8000/predict';
+    const url = 'http://ml:8000/predict';
 
     try {
       const response = await axios.post(url, {
