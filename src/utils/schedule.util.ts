@@ -1,9 +1,5 @@
-import { addDays, getDay } from 'date-fns';
-import {
-  Student,
-  StudentDocument,
-} from 'src/libs/shared/src/schemas/student.schema';
-import { StudentService } from 'src/student/student.service';
+import { addDays, startOfWeek, startOfDay } from 'date-fns';
+import { StudentDocument } from 'src/libs/shared/src/schemas/student.schema';
 
 export function getStudentCycle(student: StudentDocument) {
   const totalLessons = student.frequency * 4;
@@ -15,19 +11,29 @@ export function createSchedule(student: StudentDocument) {
   const lessonDays = student.time.map((t) => getDayNumber(t.day));
   const totalLessons = student.frequency * 4;
   const cycle = getStudentCycle(student);
-  let schedule: any[] = [];
-  let date = student.startDate;
+
+  const schedule: any[] = [];
   let count = 1;
+
+  let weekStart = startOfWeek(student.startDate, { weekStartsOn: 0 });
 
   while (count <= totalLessons) {
     for (let day of lessonDays) {
-      if (getDay(date) !== day) {
-        date = addDays(date, (day - getDay(date) + 7) % 7);
-      }
-      schedule.push({ studentId: student.id, date, count, cycle });
+      let lessonDate = addDays(weekStart, day);
+
+      if (lessonDate < startOfDay(student.startDate)) continue;
+
+      schedule.push({
+        studentId: student.id,
+        date: lessonDate,
+        count,
+        cycle,
+      });
       count++;
+      if (count > totalLessons) break;
     }
-    date = addDays(date, 7 - getDay(date));
+
+    weekStart = addDays(weekStart, 7);
   }
 
   return schedule;
