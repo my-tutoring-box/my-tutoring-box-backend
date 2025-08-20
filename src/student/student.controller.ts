@@ -18,6 +18,17 @@ export class StudentController {
     };
   }
 
+  @Get(':userId/students')
+  async getStudents(
+    @Param('userId') userId: string,
+  ): Promise<ApiSuccessResponse<Student[]>> {
+    const students = await this.studentService.getStudents(userId);
+    return {
+      status: 'success',
+      data: students,
+    };
+  }
+
   @Get()
   async getAllStudents(): Promise<ApiSuccessResponse<Student[]>> {
     const students = await this.studentService.findAll();

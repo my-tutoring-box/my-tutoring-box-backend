@@ -44,6 +44,10 @@ export class StudentService {
     return student;
   }
 
+  async getStudents(userId: string) {
+    return await this.studentModel.find({ userId });
+  }
+
   async findAll() {
     return await this.studentModel.find();
   }
