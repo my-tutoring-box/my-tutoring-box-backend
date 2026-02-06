@@ -22,7 +22,9 @@ export class LessonService {
   ) {}
 
   async findCurrentLesson(studentId: string) {
-    const student = await this.studentModel.findById(studentId);
+    const student = await this.studentModel
+      .findById(studentId)
+      .select('count frequency');
     if (!student) return;
 
     const cycle = getStudentCycle(student);
@@ -37,7 +39,11 @@ export class LessonService {
 
     return await this.lessonModel
       .findOne({ calendarId: calendar._id })
-      .populate<{ calendarId: Calendar }>('calendarId')
+      .populate({
+        path: 'calendarId',
+        select: 'date count cycle',
+      })
+      .select('content homework calendarId')
       .lean();
   }
 
