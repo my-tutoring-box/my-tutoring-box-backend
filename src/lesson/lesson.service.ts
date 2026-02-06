@@ -25,6 +25,18 @@ export class LessonService {
     const student = await this.studentModel.findById(studentId);
     if (!student) return;
 
+    // [성능 측정] 최적화 전 쿼리 실행 계획
+    const explained = (await this.lessonModel
+      .find({ studentId })
+      .explain('executionStats')) as any;
+    console.log('[explain] findCurrentLesson:', {
+      stage: explained?.queryPlanner?.winningPlan?.stage,
+      totalDocsExamined: explained?.executionStats?.totalDocsExamined,
+      totalKeysExamined: explained?.executionStats?.totalKeysExamined,
+      nReturned: explained?.executionStats?.nReturned,
+      executionTimeMillis: explained?.executionStats?.executionTimeMillis,
+    });
+
     const lessons = await this.lessonModel
       .find({ studentId })
       .populate<{ calendarId: Calendar }>('calendarId')
