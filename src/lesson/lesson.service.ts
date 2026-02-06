@@ -25,38 +25,20 @@ export class LessonService {
     const student = await this.studentModel.findById(studentId);
     if (!student) return;
 
-    // [성능 측정] 최적화 전 쿼리 실행 계획
-    const explained = (await this.lessonModel
-      .find({ studentId })
-      .explain('executionStats')) as any;
-    console.log('[explain] findCurrentLesson:', {
-      stage: explained?.queryPlanner?.winningPlan?.stage,
-      totalDocsExamined: explained?.executionStats?.totalDocsExamined,
-      totalKeysExamined: explained?.executionStats?.totalKeysExamined,
-      nReturned: explained?.executionStats?.nReturned,
-      executionTimeMillis: explained?.executionStats?.executionTimeMillis,
-    });
+    const cycle = getStudentCycle(student);
+    const targetCount = student.count + 1 - (cycle - 1) * student.frequency * 4;
 
-    const lessons = await this.lessonModel
-      .find({ studentId })
+    const calendar = await this.calendarModel.findOne({
+      studentId,
+      cycle,
+      count: targetCount,
+    });
+    if (!calendar) return;
+
+    return await this.lessonModel
+      .findOne({ calendarId: calendar._id })
       .populate<{ calendarId: Calendar }>('calendarId')
       .lean();
-
-    const sortedLessons = lessons.sort(
-      (a, b) =>
-        new Date(b.calendarId.date).getTime() -
-        new Date(a.calendarId.date).getTime(),
-    );
-
-    const cycle = getStudentCycle(student) - 1;
-
-    const lesson = sortedLessons.find(
-      (lesson) =>
-        lesson.calendarId.count ===
-        student?.count + 1 - cycle * student?.frequency * 4,
-    );
-
-    return lesson;
   }
 
   async setLesson(lessonId: string, body: LessonDto) {

@@ -32,3 +32,5 @@ export class Calendar {
 }
 
 export const CalendarSchema = SchemaFactory.createForClass(Calendar);
+
+CalendarSchema.index({ studentId: 1, cycle: 1, count: 1 });

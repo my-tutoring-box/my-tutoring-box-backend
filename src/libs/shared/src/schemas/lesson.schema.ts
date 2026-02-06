@@ -56,3 +56,5 @@ export class Lesson {
 }
 
 export const LessonSchema = SchemaFactory.createForClass(Lesson);
+
+LessonSchema.index({ calendarId: 1 });
