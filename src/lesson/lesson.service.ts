@@ -1,5 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { Model } from 'mongoose';
 import { Calendar } from 'src/libs/shared/src/schemas/calendar.schema';
 import { Lesson } from 'src/libs/shared/src/schemas/lesson.schema';
@@ -11,6 +13,8 @@ import { format } from 'date-fns';
 @Injectable()
 export class LessonService {
   constructor(
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+
     @InjectModel(Lesson.name)
     private readonly lessonModel: Model<Lesson>,
 
@@ -22,6 +26,15 @@ export class LessonService {
   ) {}
 
   async findCurrentLesson(studentId: string) {
+    const cacheKey = `lesson:current:${studentId}`;
+    console.log('[Cache] store:', (this.cacheManager as any).store?.name);
+    console.log(`[Cache] Checking for key: ${cacheKey}`);
+    const cached = await this.cacheManager.get<Lesson>(cacheKey);
+    if (cached) {
+      console.log(`[Cache] Hit!`);
+      return cached;
+    }
+
     const student = await this.studentModel
       .findById(studentId)
       .select('count frequency');
@@ -37,7 +50,7 @@ export class LessonService {
     });
     if (!calendar) return;
 
-    return await this.lessonModel
+    const lesson = await this.lessonModel
       .findOne({ calendarId: calendar._id })
       .populate({
         path: 'calendarId',
@@ -45,10 +58,16 @@ export class LessonService {
       })
       .select('content homework calendarId')
       .lean();
+
+    if (lesson) {
+      await this.cacheManager.set(cacheKey, lesson);
+      console.log(`[Cache] Data saved to Redis.`);
+    }
+    return lesson;
   }
 
-  async setLesson(lessonId: string, body: LessonDto) {
-    return await this.lessonModel.findByIdAndUpdate(
+  async setLesson(studentId: string, lessonId: string, body: LessonDto) {
+    const result = await this.lessonModel.findByIdAndUpdate(
       lessonId,
       {
         content: body.content,
@@ -56,10 +75,16 @@ export class LessonService {
       },
       { new: true },
     );
+    await this.cacheManager.del(`lesson:current:${studentId}`);
+    return result;
   }
 
-  async setHomeworkComplete(lessonId: string, homeworkId: string) {
-    return await this.lessonModel.findOneAndUpdate(
+  async setHomeworkComplete(
+    studentId: string,
+    lessonId: string,
+    homeworkId: string,
+  ) {
+    const result = await this.lessonModel.findOneAndUpdate(
       {
         _id: lessonId,
         'homework._id': homeworkId,
@@ -69,6 +94,8 @@ export class LessonService {
       } as any,
       { new: true },
     );
+    await this.cacheManager.del(`lesson:current:${studentId}`);
+    return result;
   }
 
   async summaryLessons(studentId: string) {

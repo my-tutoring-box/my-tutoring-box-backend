@@ -1,36 +1,41 @@
 # my-tutoring-box-backend
 
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+과외 관리 플랫폼 백엔드 서버
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 기술 스택
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Framework**: NestJS 11
+- **Database**: MongoDB (Mongoose ODM)
+- **Cache**: Redis (cache-manager)
+- **Language**: TypeScript
 
 ## Project setup
 
 ```bash
 $ npm install
+```
+
+### Redis 설정
+
+캐시 기능을 사용하려면 Redis 서버가 필요합니다.
+
+```bash
+# Redis 설치 (Ubuntu/WSL2)
+$ sudo apt update && sudo apt install redis-server
+
+# Redis 서버 시작
+$ sudo service redis-server start
+
+# 연결 확인
+$ redis-cli ping
+# PONG 이 출력되면 정상
+```
+
+`.env.development` 파일에 Redis 연결 정보를 설정합니다:
+
+```
+REDIS_HOST=localhost
+REDIS_PORT=6379
 ```
 
 ## Compile and run the project
@@ -46,6 +51,85 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
+## Redis 캐시 구조
+
+### 왜 캐시를 도입했는가?
+
+`findCurrentLesson`은 학생이 수업 페이지에 들어올 때마다 호출되는 API입니다.
+이 API는 내부적으로 **DB 쿼리를 3번** 실행합니다:
+
+1. `studentModel.findById()` - 학생 정보 조회
+2. `calendarModel.findOne()` - 현재 수업 일정 조회
+3. `lessonModel.findOne().populate()` - 수업 데이터 + 캘린더 join
+
+수업 데이터는 자주 변경되지 않지만, 조회는 빈번하게 발생합니다.
+Redis 캐시를 도입하여 **첫 번째 요청에서만 DB를 조회**하고, 이후 요청은 Redis에서 바로 응답합니다.
+
+### 동작 방식
+
+```
+[클라이언트 요청] → findCurrentLesson(studentId)
+         │
+         ▼
+  Redis에 캐시가 있는가? ──── Yes ──→ Redis 데이터 반환 (DB 조회 없음)
+         │
+         No
+         │
+         ▼
+  MongoDB에서 3번 쿼리 실행
+         │
+         ▼
+  결과를 Redis에 저장 (TTL: 3일)
+         │
+         ▼
+  클라이언트에 응답
+```
+
+### 캐시 무효화 (Invalidation)
+
+캐시된 데이터가 실제 DB와 달라지는 것을 방지하기 위해,
+**데이터를 변경하는 API가 호출되면 해당 캐시를 삭제**합니다.
+
+| API | 동작 | 캐시 처리 |
+|-----|------|----------|
+| `GET /:studentId/lessons` | 현재 수업 조회 | 캐시 조회 / 없으면 DB 조회 후 캐시 저장 |
+| `PATCH /:studentId/lessons/:lessonId` | 수업 내용 수정 | DB 수정 후 해당 학생 캐시 삭제 |
+| `PATCH .../homeworks/:homeworkId` | 숙제 완료 토글 | DB 수정 후 해당 학생 캐시 삭제 |
+
+캐시 키 형식: `lesson:current:{studentId}`
+
+### 설정 (AppModule)
+
+```typescript
+CacheModule.registerAsync<RedisClientOptions>({
+  isGlobal: true,                    // 모든 모듈에서 사용 가능
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (configService: ConfigService) => ({
+    store: redisStore,
+    host: configService.getOrThrow('REDIS_HOST'),
+    port: configService.getOrThrow('REDIS_PORT'),
+    db: 0,
+    ttl: 259200,                     // 3일 (초 단위)
+  }),
+})
+```
+
+- `isGlobal: true` → 각 모듈에서 CacheModule을 별도로 import하지 않아도 됨
+- `ttl: 259200` → 캐시 만료 시간 3일. 무효화가 없더라도 3일 후 자동 삭제됨
+
+### 사용된 패키지
+
+| 패키지 | 버전 | 역할 |
+|--------|------|------|
+| `@nestjs/cache-manager` | ^3.1.0 | NestJS 캐시 모듈 |
+| `cache-manager` | ^7.2.8 | 캐시 추상화 라이브러리 |
+| `cache-manager-redis-store` | 2.0.0 | Redis 연결 어댑터 (반드시 2.0.0) |
+| `redis` | ^3.1.2 | Redis 클라이언트 |
+
+> `cache-manager-redis-store`는 반드시 **2.0.0** 버전이어야 합니다.
+> 상위 버전 사용 시 `TypeError: Cannot read properties of undefined (reading 'bind')` 오류가 발생합니다.
+
 ## Run tests
 
 ```bash
@@ -58,43 +142,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
