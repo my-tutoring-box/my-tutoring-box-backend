@@ -98,37 +98,45 @@ Redis 캐시를 도입하여 **첫 번째 요청에서만 DB를 조회**하고, 
 
 캐시 키 형식: `lesson:current:{studentId}`
 
-### 설정 (AppModule)
+### 설정 (RedisCacheModule)
 
 ```typescript
-CacheModule.registerAsync<RedisClientOptions>({
-  isGlobal: true,                    // 모든 모듈에서 사용 가능
+// src/redis-cache.module.ts
+@Global()
+@Module({
   imports: [ConfigModule],
-  inject: [ConfigService],
-  useFactory: (configService: ConfigService) => ({
-    store: redisStore,
-    host: configService.getOrThrow('REDIS_HOST'),
-    port: configService.getOrThrow('REDIS_PORT'),
-    db: 0,
-    ttl: 259200,                     // 3일 (초 단위)
-  }),
+  providers: [
+    {
+      provide: 'CACHE_MANAGER',
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => {
+        return caching(redisStore, {
+          socket: {
+            host: configService.getOrThrow<string>('REDIS_HOST'),
+            port: configService.getOrThrow<number>('REDIS_PORT'),
+          },
+          ttl: 259200 * 1000, // 3일 (밀리초 단위)
+        });
+      },
+    },
+  ],
+  exports: ['CACHE_MANAGER'],
 })
+export class RedisCacheModule {}
 ```
 
-- `isGlobal: true` → 각 모듈에서 CacheModule을 별도로 import하지 않아도 됨
-- `ttl: 259200` → 캐시 만료 시간 3일. 무효화가 없더라도 3일 후 자동 삭제됨
+- `provide: 'CACHE_MANAGER'` → `CacheModule` 대신 'CACHE_MANAGER' 토큰으로 주입하여 사용
+- `ttl: 259200 * 1000` → 캐시 만료 시간 3일 (밀리초). 무효화가 없더라도 3일 후 자동 삭제됨
 
 ### 사용된 패키지
 
 | 패키지 | 버전 | 역할 |
 |--------|------|------|
 | `@nestjs/cache-manager` | ^3.1.0 | NestJS 캐시 모듈 |
-| `cache-manager` | ^7.2.8 | 캐시 추상화 라이브러리 |
-| `cache-manager-redis-store` | 2.0.0 | Redis 연결 어댑터 (반드시 2.0.0) |
-| `redis` | ^3.1.2 | Redis 클라이언트 |
+| `cache-manager` | ^5.7.6 | 캐시 추상화 라이브러리 |
+| `cache-manager-redis-yet` | ^5.1.5 | Redis 연결 어댑터 |
 
-> `cache-manager-redis-store`는 반드시 **2.0.0** 버전이어야 합니다.
-> 상위 버전 사용 시 `TypeError: Cannot read properties of undefined (reading 'bind')` 오류가 발생합니다.
+
 
 ## Run tests
 
